@@ -1,0 +1,397 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Veo 3 Video Generator</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-50 min-h-screen">
+    <div class="container mx-auto px-4 py-8 max-w-4xl">
+        <!-- Header -->
+        <div class="text-center mb-8">
+            <h1 class="text-4xl font-bold text-gray-900 mb-2">Veo 3 Video Generator</h1>
+            <p class="text-lg text-gray-600">Generate videos using Google's Veo 3 model via FAL.ai</p>
+            <div id="serverStatus" class="mt-2">
+                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800">
+                    Checking server status...
+                </span>
+            </div>
+        </div>
+
+        <!-- Main Content -->
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+            <!-- Input Form -->
+            <div class="bg-white rounded-lg shadow-lg p-6">
+                <h2 class="text-2xl font-semibold text-gray-800 mb-6">Video Configuration</h2>
+                
+                <form id="videoForm" class="space-y-6">
+                    <!-- Prompt -->
+                    <div>
+                        <label for="prompt" class="block text-sm font-medium text-gray-700 mb-2">
+                            Video Prompt *
+                        </label>
+                        <textarea 
+                            id="prompt" 
+                            rows="6" 
+                            class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                            placeholder="Describe the video you want to generate. Include subject, context, action, style, camera motion, composition, and ambiance..."
+                            required
+                        >A casual street interview on a busy New York City sidewalk in the afternoon. The interviewer holds a plain, unbranded microphone and asks:
+"Have you seen Google's new Veo3 model?"
+
+The person being interviewed smiles and replies clearly:
+"Yeah — it's already available on fal. It's crazy good."
+
+Vertical video format. Realistic city background, natural pacing, accurate lip syncing, and slight handheld camera movement for a TikTok-style vibe. No logos or branding on the mic.</textarea>
+                        <p class="text-xs text-gray-500 mt-1">
+                            Include: Subject, Context, Action, Style, Camera motion (optional), Composition (optional), Ambiance (optional)
+                        </p>
+                    </div>
+
+                    <!-- Negative Prompt -->
+                    <div>
+                        <label for="negativePrompt" class="block text-sm font-medium text-gray-700 mb-2">
+                            Negative Prompt (Optional)
+                        </label>
+                        <textarea 
+                            id="negativePrompt" 
+                            rows="3" 
+                            class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                            placeholder="Describe what you don't want in the video..."
+                        ></textarea>
+                    </div>
+
+                    <!-- Aspect Ratio -->
+                    <div>
+                        <label for="aspectRatio" class="block text-sm font-medium text-gray-700 mb-2">
+                            Aspect Ratio
+                        </label>
+                        <select 
+                            id="aspectRatio" 
+                            class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                        >
+                            <option value="16:9">16:9 (Landscape)</option>
+                            <option value="9:16">9:16 (Portrait)</option>
+                        </select>
+                    </div>
+
+                    <!-- Duration -->
+                    <div>
+                        <label for="duration" class="block text-sm font-medium text-gray-700 mb-2">
+                            Duration
+                        </label>
+                        <select 
+                            id="duration" 
+                            class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                        >
+                            <option value="5s">5 seconds</option>
+                            <option value="8s" selected>8 seconds</option>
+                        </select>
+                    </div>
+
+                    <!-- Seed -->
+                    <div>
+                        <label for="seed" class="block text-sm font-medium text-gray-700 mb-2">
+                            Seed (Optional)
+                        </label>
+                        <input 
+                            type="number" 
+                            id="seed" 
+                            class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                            placeholder="Random seed for reproducible results"
+                        >
+                        <button 
+                            type="button" 
+                            onclick="document.getElementById('seed').value = Math.floor(Math.random() * 1000000)"
+                            class="mt-1 text-sm text-blue-600 hover:text-blue-800"
+                        >
+                            Generate Random Seed
+                        </button>
+                    </div>
+
+                    <!-- Options -->
+                    <div class="space-y-3">
+                        <div class="flex items-center">
+                            <input 
+                                type="checkbox" 
+                                id="enhancePrompt" 
+                                checked 
+                                class="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+                            >
+                            <label for="enhancePrompt" class="ml-2 block text-sm text-gray-900">
+                                Enhance Prompt
+                            </label>
+                        </div>
+                        
+                        <div class="flex items-center">
+                            <input 
+                                type="checkbox" 
+                                id="generateAudio" 
+                                checked 
+                                class="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+                            >
+                            <label for="generateAudio" class="ml-2 block text-sm text-gray-900">
+                                Generate Audio (33% more credits)
+                            </label>
+                        </div>
+                    </div>
+
+                    <!-- Submit Button -->
+                    <button 
+                        type="submit" 
+                        class="w-full bg-blue-600 text-white py-3 px-4 rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                        id="generateBtn"
+                    >
+                        Generate Video
+                    </button>
+                </form>
+            </div>
+
+            <!-- Results Panel -->
+            <div class="bg-white rounded-lg shadow-lg p-6">
+                <h2 class="text-2xl font-semibold text-gray-800 mb-6">Generated Video</h2>
+                
+                <!-- Status Display -->
+                <div id="statusDisplay" class="mb-6 hidden">
+                    <div class="bg-blue-50 border border-blue-200 rounded-md p-4">
+                        <div class="flex items-center">
+                            <div class="animate-spin rounded-full h-4 w-4 border-b-2 border-blue-600 mr-3"></div>
+                            <span class="text-sm text-blue-800" id="statusText">Initializing...</span>
+                        </div>
+                        <div class="mt-2">
+                            <div class="bg-blue-200 rounded-full h-2">
+                                <div class="bg-blue-600 h-2 rounded-full transition-all duration-300" id="progressBar" style="width: 0%"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Video Display -->
+                <div id="videoDisplay" class="hidden">
+                    <video 
+                        id="generatedVideo" 
+                        controls 
+                        class="w-full rounded-lg shadow-md"
+                        style="max-height: 400px;"
+                    >
+                        Your browser does not support the video tag.
+                    </video>
+                    
+                    <div class="mt-4 flex space-x-2">
+                        <a 
+                            id="downloadLink" 
+                            href="#" 
+                            download 
+                            class="bg-green-600 text-white px-4 py-2 rounded-md hover:bg-green-700 transition-colors"
+                        >
+                            Download Video
+                        </a>
+                        <button 
+                            onclick="copyVideoUrl()" 
+                            class="bg-gray-600 text-white px-4 py-2 rounded-md hover:bg-gray-700 transition-colors"
+                        >
+                            Copy URL
+                        </button>
+                    </div>
+                    
+                    <div class="mt-3 text-sm text-gray-600">
+                        <span id="requestId"></span>
+                    </div>
+                </div>
+
+                <!-- Error Display -->
+                <div id="errorDisplay" class="hidden">
+                    <div class="bg-red-50 border border-red-200 rounded-md p-4">
+                        <h3 class="text-lg font-medium text-red-800 mb-2">Error</h3>
+                        <p class="text-sm text-red-700" id="errorMessage"></p>
+                    </div>
+                </div>
+
+                <!-- Instructions -->
+                <div id="instructions" class="text-gray-500 text-sm">
+                    <h3 class="font-medium mb-2">Instructions:</h3>
+                    <ul class="space-y-1 list-disc list-inside">
+                        <li>API key is loaded securely from server</li>
+                        <li>Write a detailed prompt describing your desired video</li>
+                        <li>Adjust settings as needed</li>
+                        <li>Click "Generate Video" and wait for processing</li>
+                        <li>Videos are generated at 720p, 24 FPS</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let currentVideoUrl = '';
+
+        // Check server status on load
+        async function checkServerStatus() {
+            try {
+                const response = await fetch('/api/status');
+                const status = await response.json();
+                
+                const statusElement = document.getElementById('serverStatus');
+                if (status.falClientReady) {
+                    statusElement.innerHTML = `
+                        <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                            ✅ Server ready
+                        </span>
+                    `;
+                } else {
+                    statusElement.innerHTML = `
+                        <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800">
+                            ❌ Server not ready
+                        </span>
+                    `;
+                }
+            } catch (error) {
+                const statusElement = document.getElementById('serverStatus');
+                statusElement.innerHTML = `
+                    <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800">
+                        ❌ Cannot connect to server
+                    </span>
+                `;
+            }
+        }
+
+        // Call status check on page load
+        window.addEventListener('load', checkServerStatus);
+
+        document.getElementById('videoForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            const submitBtn = document.getElementById('generateBtn');
+            const statusDisplay = document.getElementById('statusDisplay');
+            const videoDisplay = document.getElementById('videoDisplay');
+            const errorDisplay = document.getElementById('errorDisplay');
+            const instructions = document.getElementById('instructions');
+            
+            // Hide all displays
+            [videoDisplay, errorDisplay, instructions].forEach(el => el.classList.add('hidden'));
+            statusDisplay.classList.remove('hidden');
+            
+            // Disable submit button
+            submitBtn.disabled = true;
+            submitBtn.textContent = 'Generating...';
+            
+            try {
+                // Prepare input data
+                const input = {
+                    prompt: document.getElementById('prompt').value,
+                    aspect_ratio: document.getElementById('aspectRatio').value,
+                    duration: document.getElementById('duration').value,
+                    enhance_prompt: document.getElementById('enhancePrompt').checked,
+                    generate_audio: document.getElementById('generateAudio').checked
+                };
+
+                const negativePrompt = document.getElementById('negativePrompt').value;
+                if (negativePrompt) {
+                    input.negative_prompt = negativePrompt;
+                }
+
+                const seed = document.getElementById('seed').value;
+                if (seed) {
+                    input.seed = parseInt(seed);
+                }
+
+                // Start progress animation
+                let progress = 0;
+                const progressBar = document.getElementById('progressBar');
+                const statusText = document.getElementById('statusText');
+                
+                statusText.textContent = 'Sending request to server...';
+                progressBar.style.width = '10%';
+
+                // Call our backend API
+                const response = await fetch('/api/generate-video', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(input)
+                });
+
+                if (!response.ok) {
+                    const errorData = await response.json();
+                    throw new Error(errorData.error || `HTTP error! status: ${response.status}`);
+                }
+
+                statusText.textContent = 'Processing video generation...';
+                progressBar.style.width = '50%';
+
+                const result = await response.json();
+
+                // Complete progress
+                progressBar.style.width = '100%';
+                statusText.textContent = 'Generation completed!';
+                
+                // Display result
+                if (result.data && result.data.video) {
+                    currentVideoUrl = result.data.video.url;
+                    
+                    setTimeout(() => {
+                        statusDisplay.classList.add('hidden');
+                        videoDisplay.classList.remove('hidden');
+                        
+                        const video = document.getElementById('generatedVideo');
+                        const downloadLink = document.getElementById('downloadLink');
+                        const requestIdSpan = document.getElementById('requestId');
+                        
+                        video.src = currentVideoUrl;
+                        downloadLink.href = currentVideoUrl;
+                        requestIdSpan.textContent = `Request ID: ${result.requestId}`;
+                    }, 1000);
+                } else {
+                    throw new Error('No video URL in response');
+                }
+
+            } catch (error) {
+                console.error('Error:', error);
+                statusDisplay.classList.add('hidden');
+                errorDisplay.classList.remove('hidden');
+                document.getElementById('errorMessage').textContent = error.message;
+            } finally {
+                submitBtn.disabled = false;
+                submitBtn.textContent = 'Generate Video';
+            }
+        });
+
+        function copyVideoUrl() {
+            if (currentVideoUrl) {
+                navigator.clipboard.writeText(currentVideoUrl).then(() => {
+                    alert('Video URL copied to clipboard!');
+                }).catch(err => {
+                    console.error('Failed to copy: ', err);
+                });
+            }
+        }
+
+        // Add example prompts
+        const examplePrompts = [
+            "A majestic eagle soaring over a mountain landscape at golden hour. Cinematic shot with dramatic lighting and slow motion.",
+            "A bustling Tokyo street at night with neon lights reflecting on wet pavement. People walking with umbrellas in the rain.",
+            "A cozy cabin interior with a fireplace crackling. Warm lighting, books scattered around, and snow falling outside the window.",
+            "An underwater scene with colorful coral reef and tropical fish swimming gracefully. Clear blue water with sunlight filtering down."
+        ];
+
+        // Add example prompt buttons
+        const promptTextarea = document.getElementById('prompt');
+        const exampleContainer = document.createElement('div');
+        exampleContainer.className = 'mt-2 space-x-2';
+        exampleContainer.innerHTML = '<p class="text-xs text-gray-500 mb-2">Example prompts:</p>';
+
+        examplePrompts.forEach((prompt, index) => {
+            const button = document.createElement('button');
+            button.type = 'button';
+            button.className = 'text-xs bg-gray-100 hover:bg-gray-200 px-2 py-1 rounded mb-1 mr-1';
+            button.textContent = `Example ${index + 1}`;
+            button.onclick = () => promptTextarea.value = prompt;
+            exampleContainer.appendChild(button);
+        });
+
+        promptTextarea.parentNode.appendChild(exampleContainer);
+    </script>
+</body>
+</html>
